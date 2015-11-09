@@ -64,37 +64,6 @@ public class DDA {
 
 	private Collision ret = new Collision();
 	public Collision step (Vector3 voxel) {
-//		if (isFirst) {
-//			isFirst = false;
-//			Vector3 normals = new Vector3(-1, -1, -1);
-//			if(originOffset.x > 0.5) {
-//				originOffset.x = 1 - originOffset.x;
-//				normals.x = 1;
-//			}
-//			if(originOffset.y > 0.5) {
-//				originOffset.y = 1 - originOffset.y;
-//				normals.y = 1;
-//			}
-//			if(originOffset.z > 0.5) {
-//				originOffset.z = 1 - originOffset.z;
-//				normals.z = 1;
-//			}
-//			if(originOffset.x < originOffset.y && originOffset.x < originOffset.z) {
-//				ret.setDist(-originOffset.x);
-//				ret.setNormal(normals.x, 0, 0);
-//			} else if(originOffset.y < originOffset.x && originOffset.y < originOffset.z) {
-//				//Gdx.app.log("first", ""+originOffset);
-//				ret.setDist(-originOffset.y);
-//				ret.setNormal(0, normals.y, 0);
-//			} else {
-//				ret.setDist(-originOffset.z);
-//				ret.setNormal(0, 0, normals.z);
-//			}
-//			voxel.set(cellIndex);
-//			ret.setCell(cellIndex);
-//			return ret;
-//		}
-		//Gdx.app.log("dda", ""+tv);
 		float distance = 0;
 		if (tv.x == 0.0f || tv.x < tv.y && tv.x < tv.z) {
 			distance = tv.x;

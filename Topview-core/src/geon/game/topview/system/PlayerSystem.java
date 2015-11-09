@@ -60,9 +60,9 @@ public class PlayerSystem extends EntitySystem{
         go.nor().scl(deltaTime * walkSpeed);
 
         // only jump when on ground
-        if (input.hasPushed(Input.Keys.SPACE) && isOnGround) vel.add(0, 7, 0);
+        if (isOnGround && input.hasPushed(Input.Keys.SPACE)) vel.add(0, 8, 0);
 
-        if(isOnGround) {
+        if(isColliding) {
             vel.x /= 1.2f;
             vel.z /= 1.2f;
         }
@@ -88,20 +88,23 @@ public class PlayerSystem extends EntitySystem{
                 DDA.Collision collision;
                 float len = deltaS.len();
                 //Gdx.app.log("ds", ""+deltaS);
-                if ((collision = mapGen.doesCollide(ray, len, ignoreList)) != null && collision.getDist() <= len + 0.01f) {
-                    ignoreList.add(vectorPool.obtain().set(collision.getCell()));
-                    isColliding = true;
-                    if(collision.getNormal().y > 0) {
-                        isOnGround = true;
-                    }
-                    collide(vel, collision.getNormal());
-                    collide(go, collision.getNormal());
-                    float lenDot = deltaS.dot(collision.getNormal());
-                    float dot = tmp.set(deltaS).nor().scl(collision.getDist()).dot(collision.getNormal());
-                    //Gdx.app.log("dot", "dotmove: " + tmp.set(collision.getNormal()).scl(lenDot - dot) );
-                    deltaS.sub(tmp.set(collision.getNormal()).scl(lenDot - dot - 0.001f));
-                    //collide(deltaS, collision.getNormal());
-                    //.set(tmp.set(vel).scl(deltaTime));
+                if ((collision = mapGen.doesCollide(ray, len, ignoreList)) != null) {
+                   float lenDot = deltaS.dot(collision.getNormal());
+                   float distDot = tmp.set(deltaS).nor().scl(collision.getDist()).dot(collision.getNormal());
+                   Gdx.app.log("", String.format("norm : %s, distDot: %f, lendot: %f",collision.getNormal(), -distDot, -lenDot));
+               	 if(-distDot <= -lenDot + 0.1f) {
+		                 ignoreList.add(vectorPool.obtain().set(collision.getCell()));
+		                 isColliding = true;
+		                 if(collision.getNormal().y > 0) {
+		                     isOnGround = true;
+		                 }
+		                 collide(vel, collision.getNormal());
+		                 collide(go, collision.getNormal());
+		                 //Gdx.app.log("dot", "dotmove: " + tmp.set(collision.getNormal()).scl(lenDot - dot) );
+		                 deltaS.sub(tmp.set(collision.getNormal()).scl(lenDot - distDot)).add(tmp.set(collision.getNormal()).scl(0.1f));
+		                 //collide(deltaS, collision.getNormal());
+		                 //.set(tmp.set(vel).scl(deltaTime));
+               	 }
                 }
             }
         }

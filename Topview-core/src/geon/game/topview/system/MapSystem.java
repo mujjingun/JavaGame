@@ -33,32 +33,35 @@ public class MapSystem extends EntitySystem {
 	private HashMap<Vector2, Chunk> chunks = new HashMap<>();
 	private ModelInstance select;
 	private final Vector3 selectPos = new Vector3();
+	private final Vector3 tmp = new Vector3();
 	
 	@Override
 	public void addedToEngine (Engine engine) {
 		generateMap();
 	}
 
-	private void addBlock(Chunk chunk, BlockType bType, int x, int y, int z) {
-		chunk.chunkData[x][y][z] = new Block(bType, new Vector3(x, y, z));
+	private void addBlock(BlockType bType, int x, int y, int z) {
+		Chunk c = getChunk(tmp.set(x, y, z));
+		if(c != null)
+			c.chunkData[x][y][z] = new Block(bType, new Vector3(x, y, z));
 	}
 	
 	public void generateMap() {
 		Chunk chunk = new Chunk();
+		chunks.put(new Vector2(0, 0), chunk);
+		
 		for(int i = 0; i < Chunk.XMAX; i++) {
 			for(int j = 0; j < Chunk.ZMAX; j++) {
-				addBlock(chunk, BlockType.Dirt, i, 0, j);
+				addBlock(BlockType.Dirt, i, 0, j);
 			}
 		}
-		addBlock(chunk, BlockType.Dirt, 1, 1, 1);
-		addBlock(chunk, BlockType.Dirt, 1, 2, 1);
-		addBlock(chunk, BlockType.Dirt, 2, 1, 1);
-		addBlock(chunk, BlockType.Dirt, 2, 2, 1);
-		addBlock(chunk, BlockType.Dirt, 2, 1, 2);
-		addBlock(chunk, BlockType.Dirt, 2, 2, 2);
-		addBlock(chunk, BlockType.Dirt, 1, 1, 2);
+		addBlock(BlockType.Dirt, 1, 1, 1);
+		addBlock(BlockType.Dirt, 1, 2, 1);
+		addBlock(BlockType.Dirt, 2, 1, 1);
+		addBlock(BlockType.Dirt, 2, 2, 1);
+		addBlock(BlockType.Dirt, 2, 1, 2);
+		addBlock(BlockType.Dirt, 1, 1, 2);
 		
-		chunks.put(new Vector2(0, 0), chunk);
 		Material m = new Material(new TextureAttribute(TextureAttribute.Diffuse, new Texture(Gdx.files.internal("select.png"))));
 		m.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
 		select = new ModelInstance(new ModelBuilder().createBox(1.03f, 1.03f, 1.03f, m,
@@ -119,8 +122,9 @@ public class MapSystem extends EntitySystem {
 		}
 		return getChunk(pos).chunkData[mathMod((int)pos.x, Chunk.XMAX)][mathMod((int)pos.y, Chunk.YMAX)][mathMod((int)pos.z, Chunk.ZMAX)];
 	}
+	private Vector2 tmp2 = new Vector2();
 	Chunk getChunk(Vector3 pos) {
-		Vector2 chunk = new Vector2(floor(pos.x / Chunk.XMAX), floor(pos.z / Chunk.ZMAX));
+		Vector2 chunk = tmp2.set(floor(pos.x / Chunk.XMAX), floor(pos.z / Chunk.ZMAX));
 		return chunks.get(chunk);
 	}
 
