@@ -1,7 +1,7 @@
 
 package geon.game.topview.desktop;
 
-import geon.game.topview.Game;
+import geon.game.topview.GameMain;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
@@ -14,11 +14,11 @@ public class DesktopLauncher {
 		config.height = 768;
 		config.samples = 3;
 		config.fullscreen = false;
-		config.vSyncEnabled = false;
+		config.vSyncEnabled = true;
 		config.useGL30 = false;
-		config.foregroundFPS = 500;
+		config.foregroundFPS = 60;
 
-		new LwjglApplication(new Game(), config);
+		new LwjglApplication(new GameMain(), config);
 
 	}
 }

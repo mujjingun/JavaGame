@@ -8,9 +8,13 @@ import com.badlogic.ashley.core.Engine;
 import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /**
  * <pre>
@@ -27,12 +31,22 @@ import com.badlogic.gdx.math.Vector3;
 public class CameraSystem extends EntitySystem {
 
 	private PerspectiveCamera cam;
+	private OrthographicCamera orthCam;
 	public static final float FOV = 70;
+	private ExtendViewport viewport;
+	
+	private boolean doSway = false;
+	private float swayTime = 0;
 	
 	public PerspectiveCamera getCam () {
 		return cam;
 	}
 
+	public void sway(boolean doSway, float swayTime) {
+		this.doSway = doSway;
+		this.swayTime = swayTime;
+	}
+	
 	@Override
 	public void addedToEngine (Engine engine) {
 		
@@ -42,15 +56,18 @@ public class CameraSystem extends EntitySystem {
 		cam.far = 256f;
 		cam.update();
 		
+		viewport = new ExtendViewport(30, 30, cam);
+		
+		orthCam = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 	}
 
 	@Override
 	public void removedFromEngine (Engine engine) {
 	}
 
-	private final Vector3 camPos = new Vector3(1f, 10f, 1f);
+	private final Vector3 camPos = new Vector3(20f, 10f, 1f);
 	private final Vector2 camAngle = new Vector2(0, -1f), destAngle = camAngle.cpy();
-	private float mouseSpeed = 1;
+	private float mouseSpeed = 0.005f;
 	private final Vector3 direction = new Vector3(), up = new Vector3();
 	private final Vector2 tmp = new Vector2();
 	private final float cameraSmooth = 20f;
@@ -60,8 +77,8 @@ public class CameraSystem extends EntitySystem {
 
 		InputSystem input = getEngine().getSystem(InputSystem.class);
 
-		destAngle.x += mouseSpeed * deltaTime * -input.getMouseMoved().x;
-		destAngle.y += mouseSpeed * deltaTime * input.getMouseMoved().y;
+		destAngle.x += mouseSpeed * -input.getMouseMoved().x;
+		destAngle.y += mouseSpeed * input.getMouseMoved().y;
 		destAngle.y = Math.max(-PI / 2 + 0.01f, Math.min(PI / 2 - 0.01f, destAngle.y));
 
 		// smooth movement
@@ -111,7 +128,25 @@ public class CameraSystem extends EntitySystem {
 		final int height = Gdx.graphics.getHeight();
 		
 		moveCamera(width, height, deltaTime);
+		if(doSway) {
+			float swayAmount = MathUtils.sin(swayTime * 10f) / 30f;
+			cam.position.set(camPos);
+			cam.translate(0, swayAmount, 0);
+		}
 		
+		viewport.update(width, height);
+		viewport.apply();
+		
+		orthCam.setToOrtho(false, width, height);
+		orthCam.update();
+	}
+
+	public OrthographicCamera getOrthCam () {
+		return orthCam;
+	}
+
+	public void setOrthCam (OrthographicCamera orthCam) {
+		this.orthCam = orthCam;
 	}
 
 }

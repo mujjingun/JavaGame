@@ -29,14 +29,13 @@ public class InputSystem extends EntitySystem implements InputProcessor {
 			return tmp.set(0, 0);
 	}
 
-	public InputSystem () {
-		Gdx.input.setInputProcessor(this);
-		Gdx.input.setCursorCatched(true);
-		isCursorCatched = true;
-	}
-
 	@Override
 	public void update (float deltaTime) {
+		if(Gdx.input.getInputProcessor() != this) {
+			Gdx.input.setInputProcessor(this);
+			Gdx.input.setCursorCatched(true);
+			isCursorCatched = true;
+		}
 		updateMouse(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
 	}
 
@@ -77,6 +76,15 @@ public class InputSystem extends EntitySystem implements InputProcessor {
 	@Override
 	public boolean keyUp (int keycode) {
 		click.put(keycode, 0);
+		if(keycode == Keys.F11) {
+			if(!Gdx.graphics.isFullscreen()) {
+				Gdx.graphics.setDisplayMode(
+					Gdx.graphics.getDesktopDisplayMode().width,
+					Gdx.graphics.getDesktopDisplayMode().height, true);
+			} else {
+				Gdx.graphics.setDisplayMode(1024, 768, false);
+			}
+		}
 		return false;
 	}
 

@@ -1,5 +1,5 @@
 info face="soya_barun9" size=12 bold=0 italic=0 charset="" unicode=0 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=0,0
-common lineHeight=16 base=12 scaleW=1024 scaleH=1024 pages=1 packed=0
+common lineHeight=16 base=18 scaleW=1024 scaleH=1024 pages=1 packed=0
 page id=0 file="barun.png"
 chars count=2444
 char id=32   x=0     y=0     width=0     height=0     xoffset=0     yoffset=12    xadvance=5     page=0  chnl=0 

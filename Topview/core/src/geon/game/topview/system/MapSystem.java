@@ -7,6 +7,7 @@ import geon.game.topview.Chunk;
 import geon.game.topview.DDA;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -37,7 +38,16 @@ public class MapSystem extends EntitySystem {
 	
 	@Override
 	public void addedToEngine (Engine engine) {
-		generateMap();
+		new Thread(new Runnable() {
+			@Override
+			public void run () {
+				generateMap();
+				
+				for(Chunk c : chunks.values()) {
+					c.generateMesh();
+				}
+			}
+		}).start();
 		
 		Material m = new Material(new TextureAttribute(TextureAttribute.Diffuse, new Texture(Gdx.files.internal("select.png"))));
 		m.set(new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA));
@@ -48,67 +58,15 @@ public class MapSystem extends EntitySystem {
 	private void addBlock(BlockType bType, int x, int y, int z, boolean makeChunk) {
 		Chunk c = getChunk(tmp.set(x, y, z), makeChunk);
 		Vector3 local = Chunk.toLocal(x, y, z);
-		if(c != null)
+		if(c != null) {
 			c.chunkData[(int)local.x][(int)local.y][(int)local.z] = new Block(bType, new Vector3(x, y, z));
-	}
-	
-	class MazeMaker {
-		public final int[][] DIR = {
-			{-1, 0}, {0, 1}, {1, 0}, {0, -1}
-		};
-		private final static int MAZE_HEIGHT = 16, MAZE_WIDTH = 16;
-		class Cell {
-			public int[] wall = new int[4]; {
-				wall[0] = wall[1] = wall[2] = wall[3] = 1;
-			}
-			@Override
-			public String toString() {
-				return String.format("%d %d %d %d ", wall[0], wall[1], wall[2], wall[3]);
-			}
-		}
-		private final Cell[][] maze = new Cell[MAZE_HEIGHT + 2][];
-		private final boolean[][] chk = new boolean[MAZE_HEIGHT + 2][]; {
-			for (int i = 0; i < MAZE_HEIGHT + 2; i++){
-				chk[i] = new boolean[MAZE_WIDTH + 2];
-				maze[i] = new Cell[MAZE_WIDTH + 2];
-				for (int j = 0; j < MAZE_WIDTH + 2; j++) {
-					chk[i][j] = false;
-					maze[i][j] = new Cell();
-					if(i == 1 && j == 1) {
-						maze[i][j].wall[0] = 0;
-						maze[i][j].wall[3] = 0;
-					}
-					if(i == 0 || i == MAZE_HEIGHT + 1 || j == 0 || j == MAZE_WIDTH + 1) {
-						chk[i][j] = true;
-					}
-				}
-			}
-		}
-		private final Random rand = new Random();
-		public Cell[][] makeMaze(int h, int w) {
-			chk[h][w] = true;
-			for(;;) {
-				boolean blocked = true;
-				for(int j = 0; j < 4; j++) {
-					if(!chk[h + DIR[j][0]][w + DIR[j][1]]) {
-						blocked = false;
-						break;
-					}
-				}
-				if (blocked) break;
-				int d = rand.nextInt(4);
-				int nh = h + DIR[d][0], nw = w + DIR[d][1];
-				if (chk[nh][nw]) continue;
-				maze[h][w].wall[d] = maze[nh][nw].wall[(d + 2) % 4] = 0;
-				makeMaze(nh, nw);
-			}
-			return maze;
+			c.update();
 		}
 	}
 	
 	public void generateMap() {
 		
-		MazeMaker.Cell[][] cells = new MazeMaker().makeMaze(1, 1);
+		MazeMaker.Cell[][] cells = new MazeMaker().makeMaze();
 		for(int i = 1; i < cells.length - 1; i++) {
 			for(int j = 1; j < cells[i].length - 1; j++) {
 				int ci = i * 3, cj = j * 3;
@@ -146,12 +104,12 @@ public class MapSystem extends EntitySystem {
 				addBlock(BlockType.Brick, ci, 2, cj, true);
 				addBlock(BlockType.Brick, ci, 1, cj + 3, true);
 				addBlock(BlockType.Brick, ci, 2, cj + 3, true);
+				addBlock(BlockType.Brick, ci + 3, 1, cj, true);
+				addBlock(BlockType.Brick, ci + 3, 2, cj, true);
+				addBlock(BlockType.Brick, ci + 3, 1, cj + 3, true);
+				addBlock(BlockType.Brick, ci + 3, 2, cj + 3, true);
 			}
 		}
-		
-		for(Entry<Vector2, Chunk> chunk : chunks.entrySet())
-			chunk.getValue().generateMesh();
-		
 	}
 	
 	public void render(ModelBatch modelBatch, Environment environment) {
@@ -159,10 +117,12 @@ public class MapSystem extends EntitySystem {
 			select.transform.setToTranslation(selectPos);
 			modelBatch.render(select, environment);
 		}
-		int count = 0;
+		int generateCount = 0;
 		for(Entry<Vector2, Chunk> chunk : chunks.entrySet()) {
-			//chunk.getValue().
-			modelBatch.render(chunk.getValue().getModel(), environment);
+			if(generateCount < 1 && chunk.getValue().generateModelIfUpdated()) generateCount++;
+			
+			if(chunk.getValue().getModel() != null)
+				modelBatch.render(chunk.getValue().getModel(), environment);
 		}
 	}
 
@@ -226,4 +186,78 @@ public class MapSystem extends EntitySystem {
 		this.selectPos.set(selectPos);
 	}
 	
+}
+
+
+class MazeMaker {
+	public final int[][] DIR = {
+		{-1, 0}, {0, 1}, {1, 0}, {0, -1}
+	};
+	private final static int MAZE_HEIGHT = 16, MAZE_WIDTH = 16;
+	class Cell {
+		public int[] wall = new int[4]; {
+			wall[0] = wall[1] = wall[2] = wall[3] = 1;
+		}
+		@Override
+		public String toString() {
+			return String.format("%d %d %d %d ", wall[0], wall[1], wall[2], wall[3]);
+		}
+	}
+	private final Cell[][] maze = new Cell[MAZE_HEIGHT + 2][];
+	private final boolean[][] chk = new boolean[MAZE_HEIGHT + 2][]; {
+		for (int i = 0; i < MAZE_HEIGHT + 2; i++){
+			chk[i] = new boolean[MAZE_WIDTH + 2];
+			maze[i] = new Cell[MAZE_WIDTH + 2];
+			for (int j = 0; j < MAZE_WIDTH + 2; j++) {
+				chk[i][j] = false;
+				maze[i][j] = new Cell();
+				if(i == MAZE_HEIGHT / 2 && j == 1) {
+					maze[i][j].wall[3] = 0;
+				}
+				if(i == MAZE_HEIGHT / 2 && j == MAZE_WIDTH) {
+					maze[i][j].wall[1] = 0;
+				}
+				if(i == 0 || i == MAZE_HEIGHT + 1 || j == 0 || j == MAZE_WIDTH + 1) {
+					chk[i][j] = true;
+				}
+			}
+		}
+	}
+	private final Random rand = new Random();
+	class CellPos {
+		int h, w;
+
+		public CellPos (int h, int w) {
+			this.h = h;
+			this.w = w;
+		}
+	}
+	LinkedList<CellPos> list = new LinkedList<>();
+	public Cell[][] makeMaze() {
+		list.add(new CellPos(1, 1));
+		chk[1][1] = true;
+		for(;;) {
+			int i = rand.nextInt(list.size());
+			CellPos pos = list.get(i);
+			int[] branchable = new int[4];
+			int branchableCnt = 0;
+			for(int j = 0; j < 4; j++) {
+				if(!chk[pos.h + DIR[j][0]][pos.w + DIR[j][1]]) {
+					branchable[branchableCnt++] = j;
+				}
+			}
+			if(branchableCnt > 0) {
+				int d = branchable[rand.nextInt(branchableCnt)];
+				int nh = pos.h + DIR[d][0], nw = pos.w + DIR[d][1];
+				chk[nh][nw] = true;
+				maze[pos.h][pos.w].wall[d] = maze[nh][nw].wall[(d + 2) % 4] = 0;
+				list.add(new CellPos(nh, nw));
+			} else {
+				if(list.size() > 1)
+					list.remove(i);
+				else break;
+			}
+		}
+		return maze;
+	}
 }

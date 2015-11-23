@@ -1,9 +1,11 @@
 package geon.game.topview;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
@@ -11,7 +13,10 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder.VertexInfo;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 
 
 public class Chunk implements Serializable{
@@ -32,23 +37,68 @@ public class Chunk implements Serializable{
 	}
 	
 	private ModelInstance model = null;
+	private ModelBuilder md;
+	private boolean haveToUpdate = true;
+	private boolean haveToUpdateModel = false;
 	
 	public ModelInstance getModel () {
 		return model;
 	}
+	
+	public void update() {
+		haveToUpdate = true;
+	}
+	
+	public boolean generateModelIfUpdated() {
+		if(haveToUpdateModel) {
+			haveToUpdateModel = false;
+			Model m = md.end();
+			Mesh mesh = m.meshes.get(0);
+			int numVertices = mesh.getNumVertices();
+			int vertexSize = mesh.getVertexAttributes().vertexSize / 4;
+			int offset = mesh.getVertexAttribute(512).offset / 4;
+			float[] vertices = new float[numVertices * vertexSize];
+			mesh.getVertices(vertices);
+			int c = 0;
+			for(int i = 0; i < numVertices * vertexSize; i += vertexSize) {
+				vertices[i + offset] = customAttributes.get(c++);
+				vertices[i + offset + 1] = customAttributes.get(c++);
+			}
+			mesh.updateVertices(0, vertices);
+			model = new ModelInstance(m);
+			return true;
+		}
+		return false;
+	}
 
+	private ArrayList<Float> customAttributes = new ArrayList<>();
+	private int[] above = new int[3];
+	private final int[][] SURR = {
+		{-1, -1},
+		{0, -1},
+		{1, -1},
+		{1, 0},
+		{1, 1},
+		{0, 1},
+		{-1, 1},
+		{-1, 0},
+	};
+	private final boolean[] INVERT = {
+		true, true, true, false, false, false
+	};
 	public void generateMesh() {
+		if(!haveToUpdate) return;
 		boolean[] notRender = {
 			false, false, false, false, false, false,
 		};
-		ModelBuilder md = new ModelBuilder();
+		md = new ModelBuilder();
 		md.begin();
 		MeshPartBuilder mpd = md.part("part", GL20.GL_TRIANGLES, new VertexAttributes(
 			new VertexAttribute(Usage.Position, 3, "a_position"),
 			new VertexAttribute(Usage.Normal, 3, "a_normal"),
-			new VertexAttribute(Usage.TextureCoordinates, 2, "a_texCoord0")), Game.material);
-
-		int count = 0;
+			new VertexAttribute(Usage.TextureCoordinates, 2, "a_texCoord0"),
+			new VertexAttribute(512, 2, "a_occlusion")), Resources.material);
+		
 		for(int i = 0; i < Chunk.XMAX; i++) {
 			for(int j = 0; j < 5; j++) {
 				for(int k = 0; k < Chunk.ZMAX; k++) {
@@ -79,15 +129,54 @@ public class Chunk implements Serializable{
 								Block.norms[p][0],
 								Block.norms[p][1],
 								Block.norms[p][2]);
-							count ++;
+							
+							int occ = 0;
+							
+							above[0] = i + (int)Block.norms[p][0];
+							above[1] = j + (int)Block.norms[p][1];
+							above[2] = k + (int)Block.norms[p][2];
+							
+							int[] sideIdx = new int[2];
+							int sideIdxIdx = 0;
+							
+							for(int t = 0; t < 3; t++) {
+								if((int)Block.norms[p][t] == 0)
+									sideIdx[sideIdxIdx++] = t;
+							}
+							int[] tmp = new int[3]; 
+							for(int o = 0; o < 8; o++) {
+								tmp[0] = above[0];
+								tmp[1] = above[1];
+								tmp[2] = above[2];
+								for(int t = 0; t < 2; t++)
+									tmp[sideIdx[t]] += SURR[INVERT[p]? o : ((7 - o + 1) % 8)][t];
+								if(getLocal(tmp[0], tmp[1], tmp[2]).getBlockType() != BlockType.Air)
+									occ += 1 << o;
+							}
+							
+							float w = 1f / 16;
+							float x = w * (occ % 16);
+							float y = w * (occ / 16);
+							float pad = w / 32;
+							
+							customAttributes.add(x + pad);
+							customAttributes.add(y + pad);
+							
+							customAttributes.add(x + pad);
+							customAttributes.add(y + w - pad);
+							
+							customAttributes.add(x + w - pad);
+							customAttributes.add(y + w - pad);
+							
+							customAttributes.add(x + w - pad);
+							customAttributes.add(y + pad);
 						}
 					}
 				}
 			}
 		}
-		Gdx.app.log("count", ""+count);
-		Model m = md.end();
-		model = new ModelInstance(m);
+		
+		haveToUpdateModel = true;
 	}
 
 	static int mathMod(int x, int y) {

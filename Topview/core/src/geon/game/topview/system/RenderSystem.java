@@ -3,6 +3,7 @@ package geon.game.topview.system;
 
 import geon.game.topview.DepthShader;
 import geon.game.topview.MainShader;
+import geon.game.topview.Resources;
 
 import java.util.ArrayList;
 
@@ -11,11 +12,8 @@ import com.badlogic.ashley.core.EntitySystem;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Material;
@@ -30,7 +28,8 @@ import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
-import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /** <pre>
  * geon.game.topview
@@ -44,14 +43,12 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
  * @version 1.0 */
 public class RenderSystem extends EntitySystem {
 
-	private FrameBuffer depthBuffer, normalBuffer;
+	//private FrameBuffer depthBuffer, normalBuffer;
 	private Texture depthTexture, normalTexture;
 
 	private MyShaderProvider provider;
 	private ModelBatch modelBatch;
 	private SpriteBatch spriteBatch;
-	private BitmapFont bf;
-
 	private Environment environment;
 
 	// TODO: DEBUG
@@ -71,10 +68,7 @@ public class RenderSystem extends EntitySystem {
 		provider = new MyShaderProvider();
 		modelBatch = new ModelBatch(provider);
 
-		spriteBatch = new SpriteBatch();
-
-		bf = new BitmapFont(Gdx.files.internal("barun.fnt"));
-		bf.getData().setScale(1f);
+		spriteBatch = Resources.batch;
 
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.3f, 0.3f, 0.3f, 1f));
@@ -104,8 +98,8 @@ public class RenderSystem extends EntitySystem {
 	public void update (float deltaTime) {
 
 		CameraSystem camSystem = getEngine().getSystem(CameraSystem.class);
-		PerspectiveCamera cam = camSystem.getCam();
 		MapSystem mapGen = getEngine().getSystem(MapSystem.class);
+		PlayerSystem playerSystem = getEngine().getSystem(PlayerSystem.class);
 
 		// TODO: DEBUG
 		xyz.transform.setTranslation(camSystem.getCamPos().cpy().add(camSystem.getDirection().cpy().scl(3)));
@@ -144,26 +138,34 @@ public class RenderSystem extends EntitySystem {
 
 		// draw the real screen
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-		Gdx.gl.glClearColor(0.5f, 0.5f, 0.8f, 0);
+		Gdx.gl.glClearColor(0.7f, 0.7f, 1f, 0);
 
 		provider.useShader(MyShaderProvider.DEFAULT_SHADER);
 
-		modelBatch.begin(cam);
+		modelBatch.begin(camSystem.getCam());
 		
 		modelBatch.render(point, environment);
-		modelBatch.render(xyz, environment);
+		//modelBatch.render(xyz, environment);
 		mapGen.render(modelBatch, environment);
 
 		modelBatch.end();
 
+		spriteBatch.setProjectionMatrix(camSystem.getOrthCam().combined);
 		spriteBatch.begin();
 
 		// spriteBatch.draw(depthTexture, 0, 0, 300, 300);
 
 		// sp.draw(spriteBatch);
 		// spriteBatch.draw(tex2, 0, 0, width, height);
-		bf.draw(spriteBatch, "FPS : " + Gdx.graphics.getFramesPerSecond(), 0, Gdx.graphics.getHeight() - 20);
-		bf.draw(spriteBatch, "x: " + camSystem.getCamPos().x + ", y: "+ camSystem.getCamPos().y + ", z: "+ camSystem.getCamPos().z, 0, Gdx.graphics.getHeight() - 5);
+		String debug = String.format(
+			"x: %.3f\ny: %.3f\nz: %.3f\nFPS: %d\nvel: %s",
+			camSystem.getCamPos().x,
+			camSystem.getCamPos().y,
+			camSystem.getCamPos().z,
+			Gdx.graphics.getFramesPerSecond(),
+			playerSystem.getVel()
+			);
+		//Resources.font.draw(spriteBatch, debug, 0, Gdx.graphics.getHeight());
 		spriteBatch.end();
 	}
 
@@ -178,7 +180,7 @@ public class RenderSystem extends EntitySystem {
 		public static final int NORMAL_SHADER = 3;
 		private Shader normalShader; // 3
 		private int currentShader = DEFAULT_SHADER;
-
+		
 		public void useShader (int shader) {
 			this.currentShader = shader;
 		}
@@ -207,7 +209,10 @@ public class RenderSystem extends EntitySystem {
 				for (Shader s : defaultShaders) {
 					if (s.canRender(renderable)) return s;
 				}
-				DefaultShader defaultShader = new DefaultShader(renderable, new DefaultShader.Config());
+				DefaultShader.Config config = new DefaultShader.Config();
+				config.vertexShader = Gdx.files.internal("shader.vert").readString();
+				config.fragmentShader = Gdx.files.internal("shader.frag").readString();
+				DefaultShader defaultShader = new DefaultShader(renderable, config);
 				defaultShader.init();
 				defaultShaders.add(defaultShader);
 				return defaultShader;

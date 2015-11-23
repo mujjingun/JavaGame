@@ -24,7 +24,7 @@ public enum BlockType {
 
 	
 	public void setUV(MeshPartBuilder mpd) {
-		Texture t = Game.texture;
+		Texture t = Resources.texture;
 		float w = 64f / t.getWidth();
 		mpd.setUVRange(w * (blockId + 0.01f), 0, w * (blockId + 1 - 0.01f), 1);
 	}
