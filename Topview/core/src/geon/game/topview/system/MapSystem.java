@@ -126,7 +126,7 @@ public class MapSystem extends EntitySystem {
 		}
 	}
 
-	public DDA.Collision doesCollide(Ray ray, float lim, List<Vector3> ignore) {
+	public DDA.Collision doesCollide(Ray ray, float lim) {
 		if(lim == 0 || ray.direction.len() == 0) return null;
 		//Gdx.app.log("start", ""+ray.origin);
 		DDA PointDDA = new DDA(ray, 100);
