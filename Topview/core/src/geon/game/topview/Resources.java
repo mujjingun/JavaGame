@@ -6,10 +6,12 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
@@ -42,7 +44,7 @@ public class Resources {
 	public static BitmapFont font;
 
 	public static Skin skin;
-	public static Drawable healthBar, healthBarFill, cross;
+	public static Drawable healthBar, healthBarFill, cross,title;
 
 	private static Texture makeTexture(String name) {
 		Texture t = new Texture(Gdx.files.internal(name));
@@ -80,5 +82,11 @@ public class Resources {
 		healthBarFill = new NinePatchDrawable(new NinePatch(makeTexture("healthbarfill.png"), 5, 5, 5, 5));
 		
 		cross = new SpriteDrawable(new Sprite(makeTexture("cross.png")));
+		Texture titleTexture=makeTexture("title.png");
+		TextureRegion[][] titleTex=TextureRegion.split(titleTexture,100,44);
+		Animation titleAnim=new Animation(0.5f,titleTex[0]);
+		
+		title=new AnimationDrawable(titleAnim);
+		
 	}
 }
