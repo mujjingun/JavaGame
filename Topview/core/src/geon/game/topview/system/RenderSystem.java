@@ -4,11 +4,14 @@ package geon.game.topview.system;
 import geon.game.topview.DepthShader;
 import geon.game.topview.MainShader;
 import geon.game.topview.Resources;
+import geon.game.topview.components.RenderableComponent;
 
 import java.util.ArrayList;
 
 import com.badlogic.ashley.core.Engine;
+import com.badlogic.ashley.core.Entity;
 import com.badlogic.ashley.core.EntitySystem;
+import com.badlogic.ashley.core.Family;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -28,8 +31,6 @@ import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader.Config;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 /** <pre>
  * geon.game.topview
@@ -55,6 +56,8 @@ public class RenderSystem extends EntitySystem {
 	private ModelInstance xyz, point;
 
 	private final ModelBuilder modelBuilder = new ModelBuilder();
+	
+	private final Family renderableFamily = Family.all(RenderableComponent.class).get();
 
 	@Override
 	public void addedToEngine (Engine engine) {
@@ -71,7 +74,10 @@ public class RenderSystem extends EntitySystem {
 		spriteBatch = Resources.batch;
 
 		environment = new Environment();
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.3f, 0.3f, 0.3f, 1f));
+		environment.set(
+			new ColorAttribute(ColorAttribute.AmbientLight, 0.3f, 0.3f, 0.3f, 1f),
+			new ColorAttribute(ColorAttribute.Diffuse, .9f, .9f, .9f, 1f)
+			);
 		environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 		environment.add(new PointLight().set(0.8f, 0.8f, 0.8f, -7f, -3f, -7f, 100.0f));
 //
@@ -147,6 +153,12 @@ public class RenderSystem extends EntitySystem {
 		modelBatch.render(point, environment);
 		//modelBatch.render(xyz, environment);
 		mapGen.render(modelBatch, environment);
+		
+		for(Entity c : getEngine().getEntitiesFor(renderableFamily)) {
+			ModelInstance i = c.getComponent(RenderableComponent.class).model;
+			
+			modelBatch.render(i, environment);
+		}
 
 		modelBatch.end();
 
@@ -158,14 +170,13 @@ public class RenderSystem extends EntitySystem {
 		// sp.draw(spriteBatch);
 		// spriteBatch.draw(tex2, 0, 0, width, height);
 		String debug = String.format(
-			"x: %.3f\ny: %.3f\nz: %.3f\nFPS: %d\nvel: %s",
+			"x: %.3f\ny: %.3f\nz: %.3f\nFPS: %d",
 			camSystem.getCamPos().x,
 			camSystem.getCamPos().y,
 			camSystem.getCamPos().z,
-			Gdx.graphics.getFramesPerSecond(),
-			playerSystem.getVel()
+			Gdx.graphics.getFramesPerSecond()
 			);
-		//Resources.font.draw(spriteBatch, debug, 0, Gdx.graphics.getHeight());
+		Resources.font.draw(spriteBatch, debug, 10, 100);
 		spriteBatch.end();
 	}
 

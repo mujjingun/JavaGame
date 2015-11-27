@@ -1,7 +1,7 @@
 package geon.game.topview.screen;
 
+import geon.game.topview.AnimatedActor;
 import geon.game.topview.GameMain;
-import geon.game.topview.MyActions;
 import geon.game.topview.Resources;
 
 import com.badlogic.gdx.Gdx;
@@ -12,8 +12,6 @@ import com.badlogic.gdx.scenes.scene2d.Action;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
@@ -34,7 +32,6 @@ public class StoryScreen implements Screen {
 	Stage stage;
 	ScreenViewport viewport;
 	Table table;
-	Label loadingLabel;
 	GameMain game;
 	
 	public StoryScreen (final GameMain game) {
@@ -48,21 +45,18 @@ public class StoryScreen implements Screen {
 		stage.addActor(table);
 		table.setFillParent(true);
 		
-		loadingLabel = new Label("맵을 생성하는 중...", Resources.skin);
-		loadingLabel.addAction(MyActions.blinkAction());
-		
-		Image titleImage=new Image(Resources.title);
-		table.add(titleImage);
-		
-		table.add(loadingLabel);
-		table.row();
-		Label a=new Label("야 딱좋다 기분좋다",Resources.skin);
-		table.add(a);
+		AnimatedActor titleImage=new AnimatedActor(Resources.title, 2f);
+		table.add(titleImage).size(600, 300);
+		titleImage.addAction(Actions.sequence(
+			Actions.alpha(0),
+			Actions.alpha(1, 1f)
+		));
 		
 		table.pack();
 		
-	//	loadingComplete();
+		//loadingComplete();
 	}
+	
 	public void loadingComplete(){
 		Actor delayActor = new Actor();
 		stage.addActor(delayActor);
@@ -70,25 +64,17 @@ public class StoryScreen implements Screen {
 			@Override
 			public boolean act (float delta) {
 				table.addAction(Actions.color(Color.WHITE, 0.5f));
-				loadingLabel.addAction(Actions.sequence(Actions.fadeOut(0.5f), new Action() {
-					
-					@Override
-					public boolean act (float delta) {
-						loadingLabel.remove();
-						game.switchToGamePlay();
-						return true;
-					}
-				}));
+				game.switchToGamePlay();
 				return true;
 			}
 		}));
 	}
+	
 	@Override
 	public void show () {
 		
 	}
 	
-
 	@Override
 	public void render (float delta) {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);

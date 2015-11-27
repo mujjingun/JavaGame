@@ -3,7 +3,10 @@ package geon.game.topview;
 import java.nio.FloatBuffer;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Animation;
@@ -13,15 +16,18 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
-import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar.ProgressBarStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
 import com.badlogic.gdx.utils.BufferUtils;
-import com.sun.javafx.scene.control.skin.ProgressBarSkin;
+import com.badlogic.gdx.utils.UBJsonReader;
 
 /**
  * <pre>
@@ -44,7 +50,13 @@ public class Resources {
 	public static BitmapFont font;
 
 	public static Skin skin;
-	public static Drawable healthBar, healthBarFill, cross,title;
+	public static Drawable healthBar, healthBarFill, cross;
+	public static AnimationDrawable title;
+	
+	public static ModelInstance byeonghack;
+	public static AnimationController byeonghackController;
+	
+	public static Drawable alphaBackground;
 
 	private static Texture makeTexture(String name) {
 		Texture t = new Texture(Gdx.files.internal(name));
@@ -82,11 +94,25 @@ public class Resources {
 		healthBarFill = new NinePatchDrawable(new NinePatch(makeTexture("healthbarfill.png"), 5, 5, 5, 5));
 		
 		cross = new SpriteDrawable(new Sprite(makeTexture("cross.png")));
+		
+		UBJsonReader jsonReader = new UBJsonReader();
+		G3dModelLoader modelLoader = new G3dModelLoader(jsonReader);
+		
+		Model byeonghackModel = modelLoader.loadModel(Gdx.files.internal("byeonghack.g3db"));
+		byeonghack = new ModelInstance(byeonghackModel);
+		byeonghack.transform.scale(0.4f, 0.4f, 0.4f);
+		
+		byeonghackController = new AnimationController(byeonghack);
+		byeonghackController.setAnimation("Armature|walk", -1);
+		
+		Pixmap pixmap = new Pixmap(1, 1, Format.RGBA8888);
+		pixmap.drawPixel(0, 0, Color.argb8888(0, 0, 0, 0.5f));
+		alphaBackground = new SpriteDrawable(new Sprite(new Texture(pixmap)));
+		
 		Texture titleTexture=makeTexture("title.png");
 		TextureRegion[][] titleTex=TextureRegion.split(titleTexture,100,44);
-		Animation titleAnim=new Animation(0.5f,titleTex[0]);
+		Animation titleAnim=new Animation(0.2f, titleTex[0]);
 		
 		title=new AnimationDrawable(titleAnim);
-		
 	}
 }

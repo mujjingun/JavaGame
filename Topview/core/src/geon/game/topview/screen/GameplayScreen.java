@@ -1,9 +1,14 @@
 package geon.game.topview.screen;
 
+import geon.game.topview.Resources;
+import geon.game.topview.components.CollisionComponent;
 import geon.game.topview.components.HealthComponent;
 import geon.game.topview.components.PlayerComponent;
+import geon.game.topview.components.RenderableComponent;
 import geon.game.topview.system.CameraSystem;
+import geon.game.topview.system.CollisionSystem;
 import geon.game.topview.system.ControlSystem;
+import geon.game.topview.system.EnemySystem;
 import geon.game.topview.system.InputSystem;
 import geon.game.topview.system.MapSystem;
 import geon.game.topview.system.PlayerSystem;
@@ -15,10 +20,6 @@ import com.badlogic.ashley.core.PooledEngine;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g3d.Material;
-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 
 /**
  * <pre>
@@ -44,7 +45,9 @@ public class GameplayScreen implements Screen {
 		engine = new PooledEngine();
 		
 		engine.addSystem(new MapSystem());
+		engine.addSystem(new CollisionSystem());
 		engine.addSystem(new PlayerSystem());
+		engine.addSystem(new EnemySystem());
 		engine.addSystem(new CameraSystem());
 		engine.addSystem(new RenderSystem());
 		engine.addSystem(new UISystem());
@@ -54,8 +57,16 @@ public class GameplayScreen implements Screen {
 		Entity player = new Entity();
 		player.add(new HealthComponent());
 		player.add(new PlayerComponent());
+		player.add(new CollisionComponent());
 		
 		engine.addEntity(player);
+		
+		Entity byeonghack = new Entity();
+		byeonghack.add(new HealthComponent());
+		byeonghack.add(new RenderableComponent(Resources.byeonghack));
+		byeonghack.add(new CollisionComponent());
+		
+		engine.addEntity(byeonghack);
 		
 		
 	}
