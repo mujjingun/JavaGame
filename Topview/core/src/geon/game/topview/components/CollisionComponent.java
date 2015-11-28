@@ -33,5 +33,6 @@ public class CollisionComponent implements Component {
 	public boolean isOnGround = false, isColliding = false;
 	
 	public CollisionComponent (float x, float y, float z) {
+		pos.set(x, y, z);
 	}
 }

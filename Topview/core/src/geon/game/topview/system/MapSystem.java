@@ -123,9 +123,11 @@ public class MapSystem extends EntitySystem {
 		
 		for(int h = 1; h <= 2; h++) {
 			addBlock(BlockType.Brick, ent, h, 0, true);
-			addBlock(BlockType.Brick, ent, h, 0 + 1, true);
+			addBlock(BlockType.Brick, ent, h, 1, true);
+			addBlock(BlockType.Brick, ent, h, 2, true);
 			addBlock(BlockType.Brick, ent + 3, h, 0, true);
-			addBlock(BlockType.Brick, ent + 3, h, 0 + 1, true);
+			addBlock(BlockType.Brick, ent + 3, h, 1, true);
+			addBlock(BlockType.Brick, ent + 3, h, 2, true);
 		}
 		
 	}

@@ -11,7 +11,8 @@ public class DesktopLauncher {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.title = "GAME";
 		config.width = 1024;
-		config.height = 768;
+		config.height = 730;
+		config.y = 0;
 		config.samples = 3;
 		config.fullscreen = false;
 		config.vSyncEnabled = true;

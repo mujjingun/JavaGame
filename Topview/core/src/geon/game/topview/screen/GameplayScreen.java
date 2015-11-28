@@ -74,9 +74,6 @@ public class GameplayScreen implements Screen {
 		byeonghack.add(new CollisionComponent(0, 50, 0));
 		
 		engine.addEntity(byeonghack);
-		
-		engine.update(0);
-		
 	}
 	
 	/* (non-Javadoc)
