@@ -54,7 +54,7 @@ public class StoryScreen implements Screen {
 		
 		table.pack();
 		
-		//loadingComplete();
+		loadingComplete();
 	}
 	
 	public void loadingComplete(){

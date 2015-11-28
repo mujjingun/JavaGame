@@ -31,4 +31,7 @@ public class CollisionComponent implements Component {
 	public final Vector3 go = new Vector3();
 	
 	public boolean isOnGround = false, isColliding = false;
+	
+	public CollisionComponent (float x, float y, float z) {
+	}
 }

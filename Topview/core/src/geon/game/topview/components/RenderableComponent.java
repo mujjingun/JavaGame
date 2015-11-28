@@ -2,6 +2,7 @@ package geon.game.topview.components;
 
 import com.badlogic.ashley.core.Component;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
 
 /**
  * <pre>
@@ -18,12 +19,15 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 public class RenderableComponent implements Component {
 	
 	public ModelInstance model;
-
+	public AnimationController controller;
 	/**
 	 * @param model
+	 * @param controller
 	 */
-	public RenderableComponent (ModelInstance model) {
+	public RenderableComponent (ModelInstance model, AnimationController controller) {
+		super();
 		this.model = model;
+		this.controller = controller;
 	}
 	
 	

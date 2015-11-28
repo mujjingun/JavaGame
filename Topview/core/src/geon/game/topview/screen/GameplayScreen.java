@@ -39,12 +39,18 @@ public class GameplayScreen implements Screen {
 
 	private float timeWarp = 1;
 	
+	public static long playerId;
+	
+	private MapSystem mapSystem;
+	
 	public GameplayScreen(final Game game) {
 		Gdx.app.log("init", "init");
 
 		engine = new PooledEngine();
 		
-		engine.addSystem(new MapSystem());
+		mapSystem = new MapSystem();
+		
+		engine.addSystem(mapSystem);
 		engine.addSystem(new CollisionSystem());
 		engine.addSystem(new PlayerSystem());
 		engine.addSystem(new EnemySystem());
@@ -57,17 +63,19 @@ public class GameplayScreen implements Screen {
 		Entity player = new Entity();
 		player.add(new HealthComponent());
 		player.add(new PlayerComponent());
-		player.add(new CollisionComponent());
+		player.add(new CollisionComponent(mapSystem.mazeMaker.MAZE_HEIGHT * 3 / 2 + 1.5f, 50, 0));
+		playerId = player.getId();
 		
 		engine.addEntity(player);
 		
 		Entity byeonghack = new Entity();
 		byeonghack.add(new HealthComponent());
-		byeonghack.add(new RenderableComponent(Resources.byeonghack));
-		byeonghack.add(new CollisionComponent());
+		byeonghack.add(new RenderableComponent(Resources.byeonghack, Resources.byeonghackController));
+		byeonghack.add(new CollisionComponent(0, 50, 0));
 		
 		engine.addEntity(byeonghack);
 		
+		engine.update(0);
 		
 	}
 	
@@ -76,6 +84,7 @@ public class GameplayScreen implements Screen {
 	 */
 	@Override
 	public void show () {
+		
 	}
 
 	/* (non-Javadoc)
